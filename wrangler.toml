@@ -1,0 +1,18 @@
+# Cloudflare Pages 配置文件
+# 适用于使用 wrangler CLI 或 Cloudflare Dashboard 部署
+
+name = "ai-travel-assistant"
+type = "webpack"
+compatibility_date = "2024-01-01"
+
+[site]
+  bucket = "./dist"
+  entry-point = "index.html"
+
+[build]
+  command = "npm run build"
+  cwd = "."
+  watch = false
+
+[build.environment]
+  NODE_VERSION = "18"

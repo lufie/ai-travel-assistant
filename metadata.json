@@ -1,0 +1,7 @@
+{
+  "name": "ai-travel-assistant",
+  "description": "AI Travel Assistant with intelligent itinerary planning and interactive maps.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

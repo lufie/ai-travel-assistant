@@ -25,6 +25,36 @@ export default defineConfig(({ mode }) => {
         'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
         'process.env.VITE_DOUBAO_API_KEY': JSON.stringify(env.VITE_DOUBAO_API_KEY)
       },
+      build: {
+        chunkSizeWarningLimit: 1000,
+        rollupOptions: {
+          output: {
+            manualChunks: (id) => {
+              // 将大型依赖单独打包
+              if (id.includes('node_modules')) {
+                // Leaflet 地图库
+                if (id.includes('leaflet')) {
+                  return 'leaflet';
+                }
+                // Supabase
+                if (id.includes('@supabase')) {
+                  return 'supabase';
+                }
+                // Google AI
+                if (id.includes('@google/genai')) {
+                  return 'google-ai';
+                }
+                // React 核心库
+                if (id.includes('react') || id.includes('react-dom')) {
+                  return 'react-vendor';
+                }
+                // 其他 node_modules
+                return 'vendor';
+              }
+            }
+          }
+        }
+      },
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),

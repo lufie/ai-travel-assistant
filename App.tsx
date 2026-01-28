@@ -47,6 +47,9 @@ const AppContent: React.FC = () => {
 
   const [departureLocation, setDepartureLocation] = useState<Location>(INITIAL_LOCATION);
   const [intentKeyword, setIntentKeyword] = useState("");
+
+  // AI 搜索到的目的地列表
+  const [aiSearchedDestinations, setAiSearchedDestinations] = useState<Destination[]>([]);
   const [showCityPicker, setShowCityPicker] = useState(false);
 
   const interactionLockRef = useRef<boolean>(false);
@@ -185,6 +188,13 @@ const AppContent: React.FC = () => {
   };
 
   const handleSelectDestination = useCallback((d: Destination) => {
+    // 将选中的目的地添加到搜索列表中（如果不在列表中）
+    setAiSearchedDestinations(prev => {
+      const exists = prev.some(dest => dest.id === d.id);
+      return exists ? prev : [...prev, d];
+    });
+
+    // 跳转到地图视图并显示该目的地详情
     setSelectedDestination(d);
     setCurrentView(ViewType.DETAIL);
     setIsChatVisible(false);
@@ -254,13 +264,14 @@ const AppContent: React.FC = () => {
           style={{ transform: activeTab === 'explore' ? 'translateX(0)' : 'translateX(-100%)' }}
         >
           <div className="w-full h-full shrink-0 relative overflow-hidden bg-white">
-            <MapView 
+            <MapView
                 lang={lang}
                 userContext={userNeeds}
+                searchedDestinations={aiSearchedDestinations}
                 onInteraction={handleMapInteraction}
                 showExitButton={isMapStage}
                 onExit={handleExitMap}
-                onSelectDestination={handleSelectDestination} 
+                onSelectDestination={handleSelectDestination}
             />
             
             <WelcomeView 
@@ -272,7 +283,7 @@ const AppContent: React.FC = () => {
               onSelectKeyword={handleKeywordSelect}
             />
 
-            <ChatView 
+            <ChatView
               ref={chatRef}
               lang={lang}
               isVisible={isChatVisible}
@@ -281,6 +292,7 @@ const AppContent: React.FC = () => {
               onKeywordSelect={(kw) => setIntentKeyword(kw)}
               onClose={() => setIsChatVisible(false)}
               onOpen={() => setIsChatVisible(true)}
+              onSelectDestination={handleSelectDestination}
             />
           </div>
 

@@ -1,12 +1,26 @@
 import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef, useMemo } from 'react';
-import { Send, Loader2, MapPin, Calendar, Clock, Plane, ChevronRight, X, ThumbsUp, ThumbsDown, Copy, RefreshCw } from 'lucide-react';
-import { Message, Language } from '../types';
+import { Send, Loader2, MapPin, Calendar, Clock, Plane, ChevronRight, X, ThumbsUp, ThumbsDown, Copy, RefreshCw, Star, Car, Train } from 'lucide-react';
+import { Message, Language, Destination } from '../types';
 import { aiService } from '../services/ai';
 import { translations } from '../locales';
 
 export interface ChatViewHandle {
   clearMessages: () => void;
   setInputValue: (val: string) => void;
+}
+
+interface AIDestination {
+  id: string;
+  name: string;
+  location: string;
+  lat: number;
+  lng: number;
+  reason: string;
+  imageUrl: string;
+  distance: string;
+  suggestedTransport: string;
+  rating: number;
+  budget: string;
 }
 
 interface Suggestion {
@@ -26,9 +40,10 @@ interface ChatViewProps {
   onKeywordSelect?: (kw: string) => void;
   onClose?: () => void;
   onOpen?: () => void;
+  onSelectDestination?: (dest: Destination) => void;
 }
 
-const ChatView = forwardRef<ChatViewHandle, ChatViewProps>(({ isVisible, lang, isWelcomeMode, onNewNeed, onKeywordSelect, onClose, onOpen }, ref) => {
+const ChatView = forwardRef<ChatViewHandle, ChatViewProps>(({ isVisible, lang, isWelcomeMode, onNewNeed, onKeywordSelect, onClose, onOpen, onSelectDestination }, ref) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -37,6 +52,13 @@ const ChatView = forwardRef<ChatViewHandle, ChatViewProps>(({ isVisible, lang, i
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
+
+  // AI 搜索到的目的地
+  const [aiDestinations, setAiDestinations] = useState<AIDestination[]>([]);
+  const [showDestinations, setShowDestinations] = useState(false);
+  // 已推荐的目的地ID，避免重复
+  const [recommendedIds, setRecommendedIds] = useState<string[]>([]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const t = translations[lang];
 
@@ -137,24 +159,44 @@ const ChatView = forwardRef<ChatViewHandle, ChatViewProps>(({ isVisible, lang, i
     setMessages(prev => [...prev, userMsg]);
     setIsThinking(true);
 
-    if (onNewNeed) onNewNeed(content);
+    // 清除之前的搜索结果
+    setShowDestinations(false);
+    setAiDestinations([]);
 
     try {
-      // 传递对话上下文给AI
-      const responseText = await aiService.generateTravelAdvice(content, lang);
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: responseText,
-        timestamp: Date.now()
-      }]);
+      // 调用AI搜索目的地
+      const searchResult = await aiService.searchDestinations(content, lang, recommendedIds);
 
-      // 生成AI建议
-      await generateSuggestions(content);
+      if (searchResult && searchResult.destinations && searchResult.destinations.length > 0) {
+        // 保存AI回复文本
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: searchResult.message || (lang === 'zh' ? '为您推荐以下目的地：' : 'Here are my recommendations:'),
+          timestamp: Date.now()
+        }]);
+
+        // 更新已推荐的ID列表
+        const newRecommendedIds = [...recommendedIds, ...searchResult.destinations.map(d => d.id)];
+        setRecommendedIds(newRecommendedIds);
+
+        // 显示目的地卡片
+        setAiDestinations(searchResult.destinations);
+        setShowDestinations(true);
+      } else {
+        // 如果没有搜索结果，返回普通文本回复
+        const responseText = await aiService.generateTravelAdvice(content, lang);
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: responseText,
+          timestamp: Date.now()
+        }]);
+      }
 
     } catch (error) {
-      console.error('AI 响应失败:', error);
-      const errorMessage = lang === 'zh' ? '抱歉，AI 暂时无法回复，请稍后再试。' : 'Sorry, AI cannot respond right now. Please try later.';
+      console.error('AI 搜索失败:', error);
+      const errorMessage = lang === 'zh' ? '抱歉，AI 暂时无法搜索，请稍后再试。' : 'Sorry, search failed. Please try later.';
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -371,6 +413,97 @@ const ChatView = forwardRef<ChatViewHandle, ChatViewProps>(({ isVisible, lang, i
           ))}
 
           {isThinking && <ThinkingAnimation />}
+
+          {/* AI 搜索到的目的地卡片 */}
+          {showDestinations && aiDestinations.length > 0 && (
+            <div className="w-full animate-bubble-in pb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-3xl mx-auto">
+                {aiDestinations.map((dest) => (
+                  <button
+                    key={dest.id}
+                    onClick={() => {
+                      // 将AI搜索结果转换为Destination格式并传递
+                      const fullDest: Destination = {
+                        id: dest.id,
+                        name: dest.name,
+                        location: dest.location,
+                        lat: dest.lat,
+                        lng: dest.lng,
+                        rating: dest.rating,
+                        tags: [],
+                        travelTime: '',
+                        suggestedTransport: dest.suggestedTransport,
+                        suggestedDuration: '',
+                        budget: dest.budget,
+                        description: dest.reason,
+                        aiReason: dest.reason,
+                        imageUrl: dest.imageUrl,
+                        distance: dest.distance,
+                        notes: []
+                      };
+                      onSelectDestination?.(fullDest);
+                      setShowDestinations(false);
+                    }}
+                    className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-xl hover:border-[#FF6B35]/30 transition-all active:scale-[0.98] text-left group"
+                  >
+                    {/* 图片 */}
+                    <div className="relative h-32 overflow-hidden">
+                      <img
+                        src={dest.imageUrl}
+                        alt={dest.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        onError={(e) => {
+                          // 图片加载失败时使用占位图
+                          const target = e.target as HTMLImageElement;
+                          target.src = `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=300&q=80`;
+                        }}
+                      />
+                      <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1">
+                        <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                        <span className="text-[10px] text-white font-bold">{dest.rating}</span>
+                      </div>
+                    </div>
+
+                    {/* 内容 */}
+                    <div className="p-4">
+                      <h4 className="text-[15px] font-bold text-gray-900 mb-2">{dest.name}</h4>
+                      <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                        <span className="text-[11px] text-gray-500">{dest.location}</span>
+                      </div>
+
+                      {/* 推荐理由 */}
+                      <p className="text-[12px] text-gray-600 mb-3 line-clamp-2 leading-relaxed">{dest.reason}</p>
+
+                      {/* 标签 */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {dest.distance && (
+                          <div className="flex items-center gap-1 bg-orange-50 px-2 py-1 rounded-lg">
+                            <span className="text-[10px] text-orange-600 font-semibold">{dest.distance}</span>
+                          </div>
+                        )}
+                        {dest.suggestedTransport && (
+                          <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg">
+                            {dest.suggestedTransport === '地铁' || dest.suggestedTransport === '地铁' ? (
+                              <Train className="w-3 h-3 text-gray-500" />
+                            ) : (
+                              <Car className="w-3 h-3 text-gray-500" />
+                            )}
+                            <span className="text-[10px] text-gray-600 font-semibold">{dest.suggestedTransport}</span>
+                          </div>
+                        )}
+                        {dest.budget && (
+                          <div className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-lg">
+                            <span className="text-[10px] text-blue-600 font-semibold">{dest.budget}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {isLoading && (
             <div className="flex justify-start">

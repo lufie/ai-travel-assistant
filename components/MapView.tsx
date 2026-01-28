@@ -20,15 +20,16 @@ import { translations } from '../locales';
 interface MapViewProps {
   onSelectDestination: (d: Destination) => void;
   lang: Language;
-  onInteraction?: () => void; 
-  onExit?: () => void; 
+  onInteraction?: () => void;
+  onExit?: () => void;
   showExitButton?: boolean;
   userContext?: string;
+  searchedDestinations?: Destination[];
 }
 
 type MapMode = 'destination' | 'hsr' | 'flight' | 'drive' | 'hotel' | 'museum' | 'all';
 
-const MapView: React.FC<MapViewProps> = ({ onSelectDestination, lang, onInteraction, onExit, showExitButton, userContext }) => {
+const MapView: React.FC<MapViewProps> = ({ onSelectDestination, lang, onInteraction, onExit, showExitButton, userContext, searchedDestinations = [] }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
@@ -112,19 +113,24 @@ const MapView: React.FC<MapViewProps> = ({ onSelectDestination, lang, onInteract
 
   useEffect(() => {
     if (!isMapReady || !mapRef.current || !markersLayerRef.current) return;
-    
+
     const markersLayer = markersLayerRef.current;
     const map = mapRef.current;
-    
-    let filtered = MOCK_DESTINATIONS;
-    if (userContext && userContext.trim().length > 0) {
+
+    // 优先使用 AI 搜索到的目的地，否则使用 MOCK_DESTINATIONS
+    let filtered = searchedDestinations && searchedDestinations.length > 0
+      ? searchedDestinations
+      : MOCK_DESTINATIONS;
+
+    // 如果有用户输入的上下文，进一步过滤（仅对 MOCK_DESTINATIONS 有效）
+    if (filtered === MOCK_DESTINATIONS && userContext && userContext.trim().length > 0) {
       const query = userContext.trim().toLowerCase();
-      filtered = MOCK_DESTINATIONS.filter(d => 
-        d.name.toLowerCase().includes(query) || 
+      filtered = MOCK_DESTINATIONS.filter(d =>
+        d.name.toLowerCase().includes(query) ||
         d.tags.some(t => t.toLowerCase().includes(query))
       );
       if (filtered.length === 0) filtered = MOCK_DESTINATIONS;
-    } else if (currentMode !== 'all') {
+    } else if (filtered === MOCK_DESTINATIONS && currentMode !== 'all') {
       filtered = MOCK_DESTINATIONS.filter(d => d.type === currentMode);
     }
 
@@ -170,7 +176,7 @@ const MapView: React.FC<MapViewProps> = ({ onSelectDestination, lang, onInteract
        map.fitBounds(group.getBounds().pad(0.3), { animate: true });
        savedBoundsRef.current = map.getBounds();
     }
-  }, [isMapReady, currentMode, userContext, onSelectDestination, lang]);
+  }, [isMapReady, currentMode, userContext, onSelectDestination, lang, searchedDestinations]);
 
   const modes: { id: MapMode; label: string; icon: React.ReactNode }[] = [
     { id: 'all', label: t.allDiscovery, icon: <Layers className="w-4 h-4" /> },

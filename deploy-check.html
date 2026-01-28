@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Travel Assistant - 部署状态检查</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #F5F5FA 180deg);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 4xl;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+        .status {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .success { color: #10B981; }
+        .error { color: #EF4444; }
+        .waiting { color: #F59E0B; }
+        .url { color: #6B7280; word-break-all; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1 class="text-center text-3xl font-black">AI Travel Assistant 部署状态检查</h1>
+>
+            <div class="status">
+                <p>请点击下方链接快速检查：</p>
+            </div>
+
+            <div class="card">
+                <p class="url">
+                    <strong>主域名：</strong>
+                    <a href="https://ai-travel-assistant-n4fwdlktz-lufies.projects.vercel.app" target="_blank">
+                        https://ai-travel-assistant-n4fwdlktz-lufies.projects.vercel.app
+                    </a>
+                </div>
+
+                <div class="url">
+                    <strong>备用域名：</strong>
+                    <a href="https://ai-travel-assistant-n4fwdlktz-lufies.projects.vercel.app" target="_blank">
+                        https://ai-travel-assistant-n4fwdlktz-lufies.projects.vercel.app
+                    </a>
+                </div>
+
+                <div class="card">
+                    <p class="status">Vercel 部署状态</p>
+                    <div id="vercel-status">检查中...</div>
+                </div>
+
+                <div class="card">
+                    <p class="url">
+                    <strong>Vercel Dashboard：</strong>
+                    <a href="https://vercel.com/dashboard" target="_blank">
+                        https://vercel.com/dashboard
+                    </a>
+                </div>
+
+                <div class="card">
+                    <p class="url">
+                    <strong>GitHub 仓库：</strong>
+                    <a href="https://github.com/lufie/ai-assistant" target="_blank">
+                        https://github.com/lufie/ai-assistant
+                    </a>
+                </div>
+
+                <div class="card">
+                    <p class="url">
+                    <strong>诊断命令：</strong>
+                    <p>访问主域名：<code>curl -I https://ai-travel-assistant-n4fwdlktz-lufies.projects.vercel.app</code></p>
+                    <p>查看环境变量：<code>npx vercel env ls --prod</code></p>
+                </div>
+            </div>
+        </div>
+        <div class="text-center" style="margin-top: 2rem">
+            <a href="https://ai-travel-assistant-n4fwdlktz-lufies.projects.vercel.app" target="_blank" class="px-6 py-3 bg-[#FF6B35] text-white font-bold rounded-2xl">
+                刷新页面
+            </a>
+        </div>
+    </div>
+    <script>
+        // 检查主域名可访问性
+        const checkMainDomain = () => {
+            fetch(https://ai-travel-assistant-n4fwdlktz-lufies.projects.vercel.app)
+                .then(response => response.ok ? ✅ : ❌)
+                .then(data => data.text())
+                .catch(() => ❓);
+        };
+
+        // 检查备用域名可访问性
+        const checkBackupDomain = () => {
+            fetch(https://ai-travel-assistant-n4fwdlktz-lufies.projects.vercel.app)
+                .then(response => response.ok ? ✅ : ❌)
+                .then(data => data.text())
+                .catch(() => ❓);
+        };
+
+        // 检查 GitHub 仓库是否可访问
+        const checkGithub = () => {
+            fetch(https://github.com/lufie/ai-assistant)
+                .then(response => response.ok ? ✅ : ❌)
+                .then(data => data.text())
+                .catch(() => ❓);
+        };
+
+        // 检查 Vercel 服务状态
+        const checkVercelStatus = () => {
+            const statusDiv = document.getElementById(vercel-status);
+            if (!statusDiv) return;
+            if (checkMainDomain() === ✅ && checkBackupDomain() === ✅) {
+                statusDiv.textContent = 🟢 主域名和备用域名均可访问;
+                statusDiv.className = status success;
+            } else if (checkMainDomain() === ✅ || checkBackupDomain() === ✅) {
+                statusDiv.textContent = ⚠ 只有备用域名可访问;
+                statusDiv.className = error;
+            } else {
+                statusDiv.textContent = ❌ 所有域名都无法访问;
+                statusDiv.className = error;
+            }
+        };
+
+        // 自动检查（1秒后执行）
+        setTimeout(checkVercelStatus, 1000);
+
+        // 监听页面点击事件
+        document.addEventListener(DOMContentLoaded, () => {
+            const refreshBtn = document.getElementById(refresh-btn);
+            if (!refreshBtn) return;
+
+            refreshBtn.addEventListener(click, () => {
+                location.reload();
+            });
+        });
+    </script>
+</body>
+</html>
+

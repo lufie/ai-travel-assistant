@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef, useMemo } from 'react';
-import { Send, Sparkles, Loader2, MapPin, Calendar, Clock, Plane, ChevronRight, X, ThumbsUp, ThumbsDown, Copy, RefreshCw } from 'lucide-react';
+import { Send, Loader2, MapPin, Calendar, Clock, Plane, ChevronRight, X, ThumbsUp, ThumbsDown, Copy, RefreshCw } from 'lucide-react';
 import { Message, Language } from '../types';
 import { aiService } from '../services/ai';
 import { translations } from '../locales';
@@ -415,16 +415,6 @@ const ChatView = forwardRef<ChatViewHandle, ChatViewProps>(({ isVisible, lang, i
               <Send className="w-5 h-5" />
             )}
           </button>
-        </div>
-
-        {/* AI 品牌指示器 */}
-        <div className="flex items-center justify-center mt-3">
-          <div className="flex items-center gap-2 bg-[#FF6B35]/5 px-3 py-1.5 rounded-full">
-            <Sparkles className="w-3 h-3 text-[#FF6B35]" />
-            <span className="text-[10px] text-gray-600 font-medium">
-              {lang === 'zh' ? '豆包 AI 助理' : 'Doubao AI Assistant'}
-            </span>
-          </div>
         </div>
       </div>
     </div>

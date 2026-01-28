@@ -387,7 +387,7 @@ const ChatView = forwardRef<ChatViewHandle, ChatViewProps>(({ isVisible, lang, i
 
       <div
         className="absolute w-full max-w-2xl px-6 z-[1000] pointer-events-auto"
-        style={{ bottom: 'calc(12px + env(safe-area-inset-bottom, 5px))' }}
+        style={{ bottom: 'calc(0px + env(safe-area-inset-bottom, 5px))' }}
       >
         <div className="bg-white/95 backdrop-blur-3xl h-[64px] px-6 rounded-[32px] border border-white/50 shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex items-center gap-3 group focus-within:shadow-[0_20px_50px_rgba(255,107,53,0.15)] transition-all">
           <input

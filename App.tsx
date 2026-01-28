@@ -28,7 +28,14 @@ const INITIAL_LOCATION: Location = {
 const AppContent: React.FC = () => {
   const { user } = useAuth();
   const { subscribe, cancelSubscription, subscription } = useSubscription();
-  const [lang, setLang] = useState<Language>('zh');
+
+  // 自动检测系统语言
+  const detectSystemLanguage = (): Language => {
+    const browserLang = navigator.language || navigator.languages?.[0] || 'en';
+    return browserLang.startsWith('zh') ? 'zh' : 'en';
+  };
+
+  const [lang, setLang] = useState<Language>(detectSystemLanguage());
   const [currentView, setCurrentView] = useState<ViewType>(ViewType.WELCOME);
   const [activeTab, setActiveTab] = useState<'explore' | 'trip'>('explore');
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
@@ -208,21 +215,13 @@ const AppContent: React.FC = () => {
 
       {/* 顶部导航 */}
       {!isDetailStage && (
-        <div 
+        <div
           className="absolute left-0 right-0 z-[250] flex justify-center pointer-events-none px-6"
           style={{ top: 'calc(env(safe-area-inset-top, 20px) + 0px)' }}
         >
-          <div className="w-full max-w-2xl h-[60px] flex items-center justify-between pointer-events-none">
-            {/* 语言切换按钮 */}
-            <button 
-              onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
-              className="w-10 h-10 bg-white/80 backdrop-blur-3xl rounded-full border border-white/40 shadow-xl flex items-center justify-center text-gray-600 active:scale-90 transition-all pointer-events-auto"
-            >
-              <span className="text-[10px] font-black">{lang === 'zh' ? 'EN' : '中'}</span>
-            </button>
-
-            <div className="flex items-center h-[42px] p-1 bg-white/80 backdrop-blur-3xl rounded-full border border-white/40 shadow-2xl pointer-events-auto">
-              <button 
+          <div className="w-full max-w-2xl h-[60px] flex items-center justify-end pointer-events-auto gap-3">
+            <div className="flex items-center h-[42px] p-1 bg-white/80 backdrop-blur-3xl rounded-full border border-white/40 shadow-2xl">
+              <button
                 onClick={() => handleTabChange('explore')}
                 className={`px-8 lg:px-12 h-[34px] rounded-full text-[13px] font-bold transition-all duration-300 ${
                   activeTab === 'explore' ? 'bg-[#FF6B35] text-white shadow-lg' : 'text-gray-500 hover:text-gray-900'
@@ -230,7 +229,7 @@ const AppContent: React.FC = () => {
               >
                 {t.explore}
               </button>
-              <button 
+              <button
                 onClick={() => handleTabChange('trip')}
                 className={`px-8 lg:px-12 h-[34px] rounded-full text-[13px] font-bold transition-all duration-300 ${
                   activeTab === 'trip' ? 'bg-[#FF6B35] text-white shadow-lg' : 'text-gray-500 hover:text-gray-900'

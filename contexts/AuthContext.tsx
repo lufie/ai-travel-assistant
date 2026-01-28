@@ -37,13 +37,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth()
 
     // 监听认证状态变化
-    const unsubscribe = onAuthStateChange((newUser) => {
+    const subscription = onAuthStateChange((newUser) => {
       setUser(newUser)
       setIsLoading(false)
     })
 
     return () => {
-      unsubscribe()
+      subscription.unsubscribe()
     }
   }, [])
 

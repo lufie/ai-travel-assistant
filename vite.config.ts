@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
     console.log('API Key exists:', !!env.VITE_DOUBAO_API_KEY);
 
     return {
+      base: './',
       server: {
         port: 3000,
         host: '0.0.0.0',

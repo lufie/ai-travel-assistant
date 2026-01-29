@@ -5,9 +5,9 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
     // 加载环境变量，添加安全检查
     const env = {
-        VITE_SUPABASE_URL: import.meta.env?.VITE_SUPABASE_URL || '',
-        VITE_SUPABASE_ANON_KEY: import.meta.env?.VITE_SUPABASE_ANON_KEY || '',
-        VITE_DOUBAO_API_KEY: import.meta.env?.VITE_DOUBAO_API_KEY || '',
+        @VITE_SUPABASE_URL: import.meta.env?.VITE_SUPABASE_URL || '',
+        @VITE_SUPABASE_ANON_KEY: import.meta.env?.VITE_SUPABASE_ANON_KEY || '',
+        @VITE_DOUBAO_API_KEY: import.meta.env?.VITE_DOUBAO_API_KEY || '',
     };
 
     console.log('=== Vite 环境变量检查 ===');
@@ -22,9 +22,9 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       define: {
-        'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
-        'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
-        'process.env.VITE_DOUBAO_API_KEY': JSON.stringify(env.VITE_DOUBAO_API_KEY)
+        'process.env.@VITE_SUPABASE_URL': JSON.stringify(env.@VITE_SUPABASE_URL),
+        'process.env.@VITE_SUPABASE_ANON_KEY': JSON.stringify(env.@VITE_SUPABASE_ANON_KEY),
+        'process.env.@VITE_DOUBAO_API_KEY': JSON.stringify(env.@VITE_DOUBAO_API_KEY)
       },
       build: {
         chunkSizeWarningLimit: 1000,
